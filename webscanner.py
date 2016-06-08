@@ -15,7 +15,10 @@ VERSION = "Ver 1.0"
 TITLE = "VScanner - WebScanner " + VERSION
 Baidu_spider = "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"
 DATABASE = "data.db"
-TABLES = ("php", "asp", "aspx", "jsp", "dir", "file")
+scanlist = []
+is_start = False
+# tk
+window = None
 
 class Data:
 
@@ -68,12 +71,12 @@ class Data:
 		except Exception, e:
 			print e
 
-	def delete_path(self, table, path):
-		try:
-			self.cursor.execute("DELETE from " + table + " where path='" + path + "'")
-			self.conn.commit()
-		except Exception, e:
-			print e
+	# def delete_path(self, table, path):
+	# 	try:
+	# 		self.cursor.execute("DELETE from " + table + " where path='" + path + "'")
+	# 		self.conn.commit()
+	# 	except Exception, e:
+	# 		print e
 
 	def __del__(self):
 		if self.cursor or self.conn:
@@ -124,36 +127,77 @@ class Scanner:
 				pass
 
 
-class Window:
+def window():
+	window = Tk()
+	window.title(TITLE)
+	window.geometry('800x600') 
+	window.resizable(width=False, height=False)
 
-	window = None
+	menubar = Menu(window)
+	# menu setting
+	# setting_menu = Menu(menubar, tearoff=0)
+	# setting_menu.add_command(label="Setting", command=donothing)
+	# menubar.add_cascade(label="Setting", menu=setting_menu)
+	# menu custom
+	menubar.add_command(label="Custom", command=showCustom)
+	# menu about
+	about_menu = Menu(menubar, tearoff=0)
+	about_menu.add_command(label="About", command=donothing)
+	about_menu.add_command(label="Help", command=donothing)
+	menubar.add_cascade(label="About", menu=about_menu)
 
-	def __init__(self):
-		self.window()
+	# Type Frame
+	Type_frame = Frame(window, width=800, height=50)
+	phpVar = IntVar()
+	jspVar = IntVar()
+	aspVar = IntVar()
+	aspxVar = IntVar()
+	dirVar = IntVar()
+	fileVar = IntVar()
+	cb_php = Checkbutton(Type_frame, text = "PHP", variable = phpVar, height=5, width = 10)
+	cb_jsp = Checkbutton(Type_frame, text = "JSP", variable = jspVar, height=5, width = 10)
+	cb_asp = Checkbutton(Type_frame, text = "ASP", variable = aspVar, height=5, width = 10)
+	cb_aspx = Checkbutton(Type_frame, text = "ASP", variable = aspxVar, height=5, width = 10)
+	cb_dir = Checkbutton(Type_frame, text = "DIR", variable = dirVar, height=5, width = 10)
+	cb_file = Checkbutton(Type_frame, text = "FILE", variable = fileVar, height=5, width = 10)
+	cb_php.pack(side=LEFT)
+	cb_jsp.pack(side=LEFT)
+	cb_asp.pack(side=LEFT)
+	cb_aspx.pack(side=LEFT)
+	cb_dir.pack(side=LEFT)
+	cb_file.pack(side=LEFT)
+	Type_frame.pack()
 
-	def window(self):
-		# window
-		window = Tk()
-		window.title(TITLE)
-		window.geometry('800x600') 
-		window.resizable(width=False, height=False)
-		# menu
-		menubar = Menu(window)
-		menubar.add_command(label="Setting", command=self.donothing)
-		menubar.add_command(label="Setting", command=self.donothing)
-		menubar.add_command(label="Setting", command=self.donothing)
-		menubar.add_command(label="Setting", command=self.donothing)
-		menubar.add_command(label="Setting", command=self.donothing)
-		menubar.add_command(label="About", command=self.donothing)
-		window.config(menu=menubar)
-		# mainloop
-		window.mainloop()
+	# Target Frame
+	target_frame = Frame(window, width=800, height=50)
+	l_domain = Label(target_frame, text="Domain : ")
+	e_domain = Entry(target_frame, bd =2, width=80)
+	btn_start = Button(target_frame, text ="Start", width=15, command=donothing)
+	l_domain.pack(side = LEFT)
+	e_domain.pack( side = LEFT)
+	btn_start.pack()
+	target_frame.pack()
 
-	def donothing(self):
-	   tkMessageBox.showinfo("Message", "Hello World")
+	# List Frame
+
+	# mainloop & config menu
+	window.config(menu=menubar)
+	window.mainloop()
+
+def donothing():
+   tkMessageBox.showinfo("Message", "Do nothing")
+
+def showCustom():
+	winCustom = Toplevel(width=600, height=600)
+	winCustom.title("Manage Yourself Dictionary")
+	winCustom.mainloop()
+
+def showAbout():
+   tkMessageBox.showinfo("About", "About\r\nAbout")
+
+def showHelp():
+   tkMessageBox.showinfo("Help", "Help\r\Help")
 
 if __name__ == '__main__':
 	# scanner = Scanner()
-	Window()
-
-	
+	window()
