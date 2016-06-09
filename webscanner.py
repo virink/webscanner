@@ -17,8 +17,6 @@ Baidu_spider = "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/
 DATABASE = "data.db"
 scanlist = []
 is_start = False
-# tk
-window = None
 
 class Data:
 
@@ -126,6 +124,9 @@ class Scanner:
 				print e.code, path
 				pass
 
+# tk
+window = None
+
 
 def window():
 	window = Tk()
@@ -134,10 +135,6 @@ def window():
 	window.resizable(width=False, height=False)
 
 	menubar = Menu(window)
-	# menu setting
-	# setting_menu = Menu(menubar, tearoff=0)
-	# setting_menu.add_command(label="Setting", command=donothing)
-	# menubar.add_cascade(label="Setting", menu=setting_menu)
 	# menu custom
 	menubar.add_command(label="Custom", command=showCustom)
 	# menu about
@@ -147,35 +144,49 @@ def window():
 	menubar.add_cascade(label="About", menu=about_menu)
 
 	# Type Frame
-	Type_frame = Frame(window, width=800, height=50)
+	type_frame = Frame(window, width=800, height=50)
 	phpVar = IntVar()
 	jspVar = IntVar()
 	aspVar = IntVar()
 	aspxVar = IntVar()
 	dirVar = IntVar()
 	fileVar = IntVar()
-	cb_php = Checkbutton(Type_frame, text = "PHP", variable = phpVar, height=5, width = 10)
-	cb_jsp = Checkbutton(Type_frame, text = "JSP", variable = jspVar, height=5, width = 10)
-	cb_asp = Checkbutton(Type_frame, text = "ASP", variable = aspVar, height=5, width = 10)
-	cb_aspx = Checkbutton(Type_frame, text = "ASP", variable = aspxVar, height=5, width = 10)
-	cb_dir = Checkbutton(Type_frame, text = "DIR", variable = dirVar, height=5, width = 10)
-	cb_file = Checkbutton(Type_frame, text = "FILE", variable = fileVar, height=5, width = 10)
-	cb_php.pack(side=LEFT)
-	cb_jsp.pack(side=LEFT)
-	cb_asp.pack(side=LEFT)
-	cb_aspx.pack(side=LEFT)
-	cb_dir.pack(side=LEFT)
-	cb_file.pack(side=LEFT)
-	Type_frame.pack()
+	t403Var = IntVar()
+	t3xxVar = IntVar()
+	l_thread = Label(type_frame, text="超時 : ")
+	s_thread = Spinbox(type_frame, from_=0, to=30)
+	l_time = Label(type_frame, text="線程 : ")
+	s_time = Spinbox(type_frame, from_=0, to=100)
+	cb_php = Checkbutton(type_frame, text = "PHP", variable = phpVar, height=1, width = 12)
+	cb_jsp = Checkbutton(type_frame, text = "JSP", variable = jspVar, height=1, width = 12)
+	cb_asp = Checkbutton(type_frame, text = "ASP", variable = aspVar, height=1, width = 12)
+	cb_aspx = Checkbutton(type_frame, text = "ASP", variable = aspxVar, height=1, width = 12)
+	cb_dir = Checkbutton(type_frame, text = "DIR", variable = dirVar, height=1, width = 12)
+	cb_file = Checkbutton(type_frame, text = "FILE", variable = fileVar, height=1, width = 12)
+	cb_403 = Checkbutton(type_frame, text = "探測403", variable = t403Var, height=1, width = 20)
+	cb_3xx = Checkbutton(type_frame, text = "探測3xx", variable = t3xxVar, height=1, width = 20)
+	l_time.grid(row=0, column=0)
+	s_time.grid(row=0, column=1)
+	cb_php.grid(row=0, column=2)
+	cb_jsp.grid(row=0, column=3)
+	cb_asp.grid(row=0, column=4)
+	cb_403.grid(row=0, column=5)
+	l_thread.grid(row=1, column=0)
+	s_thread.grid(row=1, column=1)
+	cb_aspx.grid(row=1, column=2)
+	cb_dir.grid(row=1, column=3)
+	cb_file.grid(row=1, column=4)
+	cb_3xx.grid(row=1, column=5)
+	type_frame.pack()
 
 	# Target Frame
 	target_frame = Frame(window, width=800, height=50)
 	l_domain = Label(target_frame, text="Domain : ")
 	e_domain = Entry(target_frame, bd =2, width=80)
-	btn_start = Button(target_frame, text ="Start", width=15, command=donothing)
-	l_domain.pack(side = LEFT)
-	e_domain.pack( side = LEFT)
-	btn_start.pack()
+	btn_start = Button(target_frame, text ="Start", width=12, command=donothing)
+	l_domain.grid(row=0, column=0)
+	e_domain.grid(row=0, column=1)
+	btn_start.grid(row=0, column=2)
 	target_frame.pack()
 
 	# List Frame
