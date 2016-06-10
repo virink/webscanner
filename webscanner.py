@@ -109,8 +109,8 @@ def reqhttp(domain):
 		try:
 			response = urllib2.urlopen(request, timeout=timeout)
 			content = response.read()
-			if len(content):
-				print "Status [%s]  - Path: %s" % (response.code, path)
+			if len(content) and response.code is not 200:
+				resultlist.insert(END, "Status [%s]  - Path: %s" % (response.code, path))
 			response.close()
 			oknum += 1
 			time.sleep(1)
