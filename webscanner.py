@@ -131,30 +131,6 @@ class reqhttp(threading.Thread):
     def stop(self):  
 		self.thread_stop = True
 
-	timeout = timeVar.get()
-	while not queue.empty():
-		progressVar.set("Progress : "+str(oknum)+"/"+str(num))
-		path = queue.get()
-		url = "%s%s" % (domain, path)
-		print url
-		opener = urllib2.build_opener()
-		urllib2.install_opener(opener)
-		headers = {} 
-		headers['User-Agent'] = Baidu_spider
-		request = urllib2.Request(url, headers=headers) 
-		try:
-			response = urllib2.urlopen(request, timeout=timeout)
-			content = response.read()
-			if len(content) and response.code is not 200:
-				resultlist.insert(END, "Status [%s]  - Path: %s" % (response.code, path))
-			response.close()
-			oknum += 1
-			time.sleep(1)
-		except urllib2.HTTPError as e:
-			print e.code, path
-			pass
-	thread.exit_thread()
-
 def startScan(domain):
 	for i in xrange(int(threadVar.get())):
 		thread.start_new_thread(reqhttp, (domain,))
