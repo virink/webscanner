@@ -6,7 +6,7 @@ import tkMessageBox
 import sqlite3
 import os
 import urllib2
-import threading
+import thread
 import Queue
 import time
 
@@ -95,45 +95,33 @@ def input_txt(name):
 		queue.put(i[:-1])
 	data.insert_path_more("custom",queue)
 
-class reqhttp(threading.Thread):
-
-	def __init__(self, num, interval):  
-		threading.Thread.__init__(self)
-		self.thread_num = num  
-		self.interval = interval  
-		self.thread_stop = False  
-
-	def run(self):
-		timeout = timeVar.get()
-		domain = domainVar.get()
-		while not self.thread_stop:  
-			while not queue.empty():
-				progressVar.set("Progress : "+str(oknum)+"/"+str(num))
-				path = queue.get()
-				url = "%s%s" % (domain, path)
-				print url
-				opener = urllib2.build_opener()
-				urllib2.install_opener(opener)
-				headers = {} 
-				headers['User-Agent'] = Baidu_spider
-				request = urllib2.Request(url, headers=headers) 
-				try:
-					response = urllib2.urlopen(request, timeout=timeout)
-					content = response.read()
-					if len(content) and response.code is not 200:
-						resultlist.insert(END, "Status [%s]  - Path: %s" % (response.code, path))
-					response.close()
-					oknum += 1
-				except urllib2.HTTPError as e:
-					print e.code, path
-					pass
-				time.sleep(self.interval)
-    def stop(self):  
-		self.thread_stop = True
+def reqhttp(domain):
+	timeout = timeVar.get()
+	while not q.empty():
+		progressVar.set("Progress : "+str(oknum)+"/"+str(num))
+		path = q.get()
+		url = "%s%s" % (domain, path)
+		opener = urllib2.build_opener()
+		urllib2.install_opener(opener)
+		headers = {} 
+		headers['User-Agent'] = Baidu_spider
+		request = urllib2.Request(url, headers=headers) 
+		try:
+			response = urllib2.urlopen(request, timeout=timeout)
+			content = response.read()
+			if len(content) and response.code is not 200:
+				resultlist.insert(END, "Status [%s]  - Path: %s" % (response.code, path))
+			response.close()
+			oknum += 1
+			time.sleep(1)
+		except urllib2.HTTPError as e:
+			print e.code, path
+			pass
+	thread.exit_thread()
 
 def startScan(domain):
 	for i in xrange(int(threadVar.get())):
-		thread.start_new_thread(reqhttp, (domain,))
+		thread.start_new_thread(reqhttp, (domain))
 
 # tk
 window = None
@@ -206,7 +194,6 @@ def window():
 
 	# Target Frame
 	global domainVar
-	global btn_start
 	domainVar = StringVar()
 	domainVar.set('www.baidu.com')
 	target_frame = Frame(window, width=800, height=2)
@@ -273,10 +260,8 @@ def goScan():
 		num += len(slist)
 		scanlist += slist
 	progressVar.set("Progress : 0/"+str(num))
-	btn_start.text = "Stop"
 	global domainVar
 	startScan(domainVar.get())
-
 	
 
 def showCustom():
