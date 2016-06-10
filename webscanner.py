@@ -6,10 +6,9 @@ import tkMessageBox
 import sqlite3
 import os
 import urllib2
-import threading
+import thread
 import Queue
 import time
-import threading
 
 
 VERSION = "Ver 1.0"
@@ -19,6 +18,8 @@ DATABASE = "data.db"
 scanlist = []
 is_start = False
 oknum = 0
+queue = None
+data = None
 
 class Data:
 
@@ -84,54 +85,43 @@ class Data:
 			self.conn.commit()
 			self.conn.close()
 
-class Scanner:
 
-	queue = None
-	data = None
+def input_txt(name):
+	queue = Queue.Queue()
+	data = Data()
+	f = open(name,'r')
+	l = f.readlines()
+	for i in l:
+		queue.put(i[:-1])
+	data.insert_path_more("custom",queue)
 
-	def __init__(self):
-		self.queue = Queue.Queue()
+def reqhttp(domain):
+	timeout = timeVar.get()
+	while not q.empty():
+		progressVar.set("Progress : "+str(oknum)+"/"+str(num))
+		path = q.get()
+		url = "%s%s" % (domain, path)
+		opener = urllib2.build_opener()
+		urllib2.install_opener(opener)
+		headers = {} 
+		headers['User-Agent'] = Baidu_spider
+		request = urllib2.Request(url, headers=headers) 
+		try:
+			response = urllib2.urlopen(request, timeout=timeout)
+			content = response.read()
+			if len(content):
+				print "Status [%s]  - Path: %s" % (response.code, path)
+			response.close()
+			oknum += 1
+			time.sleep(1)
+		except urllib2.HTTPError as e:
+			print e.code, path
+			pass
+	thread.exit_thread()
 
-	# def load_dict(self):
-	# 	pass
-
-	def input_txt(self, name):
-		queue = Queue.Queue()
-		data = Data()
-		f = open(name,'r')
-		l = f.readlines()
-		for i in l:
-			queue.put(i[:-1])
-		data.insert_path_more("custom",queue)
-
-	def reqhttp(self, domain):
-		timeout = timeVar.get()
-		while not q.empty():
-			progressVar.set("Progress : "+str(oknum)+"/"+str(num))
-			path = q.get()
-			url = "%s%s" % (domain, path)
-			opener = urllib2.build_opener()
-			urllib2.install_opener(opener)
-			headers = {} 
-			headers['User-Agent'] = Baidu_spider
-			request = urllib2.Request(url, headers=headers) 
-			try:
-				response = urllib2.urlopen(request, timeout=timeout)
-				content = response.read()
-				if len(content):
-					print "Status [%s]  - Path: %s" % (response.code, path)
-				response.close()
-				oknum += 1
-				time.sleep(1)
-			except urllib2.HTTPError as e:
-				print e.code, path
-				pass
-		thread.exit_thread()
-
-	def startScan(self, domain):
-		t = threadVar.get()
-		for i in t:
-			thread.start_new_thread(self.reqhttp, (domain))
+def startScan(domain):
+	for i in xrange(int(threadVar.get())):
+		thread.start_new_thread(reqhttp, (domain))
 
 # tk
 window = None
@@ -177,9 +167,9 @@ def window():
 	threadVar.set(10)
 	timeVar.set(3)
 	l_thread = Label(type_frame, text="Thread : ")
-	s_thread = Spinbox(type_frame, from_=0, to=30, textvariable=threadVar)
+	s_thread = Spinbox(type_frame, from_=0, to=100, textvariable=threadVar)
 	l_time = Label(type_frame, text="Time : ")
-	s_time = Spinbox(type_frame, from_=0, to=100, textvariable=threadVar)
+	s_time = Spinbox(type_frame, from_=0, to=30, textvariable=timeVar)
 	cb_php = Checkbutton(type_frame, text="PHP", variable=phpVar, height=1, width=12)
 	cb_jsp = Checkbutton(type_frame, text="JSP", variable=jspVar, height=1, width=12)
 	cb_asp = Checkbutton(type_frame, text="ASP", variable=aspVar, height=1, width=12)
@@ -203,9 +193,12 @@ def window():
 	type_frame.pack()
 
 	# Target Frame
+	global domainVar
+	domainVar = StringVar()
+	domainVar.set('www.baidu.com')
 	target_frame = Frame(window, width=800, height=2)
 	l_domain = Label(target_frame, text="Domain : ")
-	e_domain = Entry(target_frame, bd =2, width=80)
+	e_domain = Entry(target_frame, bd =2, width=80, textvariable=domainVar)
 	btn_start = Button(target_frame, text ="Start", width=12, command=goScan)
 	l_domain.grid(row=0, column=0)
 	e_domain.grid(row=0, column=1)
@@ -237,6 +230,7 @@ def donothing():
 
 def goScan():
 	global num
+	global scanlist
 	is_start = True
 	infoVar.set("Infomation : Staring...")
 	resultlist = None
@@ -265,9 +259,10 @@ def goScan():
 		slist = data.select_list('file')
 		num += len(slist)
 		scanlist += slist
-	progressVar.set(num)
 	progressVar.set("Progress : 0/"+str(num))
-	resultlist = scanlist
+	global domainVar
+	startScan(domainVar.get())
+	
 
 def showCustom():
 	winCustom = Toplevel(width=600, height=600)
@@ -281,5 +276,5 @@ def showHelp():
    tkMessageBox.showinfo("Help", "Help\r\Help")
 
 if __name__ == '__main__':
-	# scanner = Scanner()
+	queue = Queue.Queue()
 	window()
