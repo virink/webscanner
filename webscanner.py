@@ -9,6 +9,7 @@ import urllib2
 import threading
 import Queue
 import time
+import threading
 
 
 VERSION = "Ver 1.0"
@@ -17,6 +18,7 @@ Baidu_spider = "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/
 DATABASE = "data.db"
 scanlist = []
 is_start = False
+oknum = 0
 
 class Data:
 
@@ -37,10 +39,10 @@ class Data:
 			self.cursor.execute("drop table if exists " + table)
 		self.conn.commit()
 
-	def select_list(self, cloumn, table):
+	def select_list(self, table):
 		try:
 			ruselt = []
-			cursor = self.cursor.execute("SELECT " + cloumn + " from " + table)
+			cursor = self.cursor.execute("SELECT path from " + table)
 			ruselt = self.cursor.fetchall()
 			return ruselt
 		except Exception, e:
@@ -90,22 +92,22 @@ class Scanner:
 	def __init__(self):
 		self.queue = Queue.Queue()
 
-	def load_dict(self):
-		pass
+	# def load_dict(self):
+	# 	pass
 
 	def input_txt(self, name):
 		queue = Queue.Queue()
 		data = Data()
-		f = open(name+'.txt','r')
+		f = open(name,'r')
 		l = f.readlines()
 		for i in l:
 			queue.put(i[:-1])
-		if name not in TABLES:
-			name = "custom"
-		data.insert_path_more(name,queue)
+		data.insert_path_more("custom",queue)
 
-	def scanhttp(self, domain):
+	def reqhttp(self, domain):
+		timeout = timeVar.get()
 		while not q.empty():
+			progressVar.set("Progress : "+str(oknum)+"/"+str(num))
 			path = q.get()
 			url = "%s%s" % (domain, path)
 			opener = urllib2.build_opener()
@@ -114,19 +116,26 @@ class Scanner:
 			headers['User-Agent'] = Baidu_spider
 			request = urllib2.Request(url, headers=headers) 
 			try:
-				response = urllib2.urlopen(request)
+				response = urllib2.urlopen(request, timeout=timeout)
 				content = response.read()
 				if len(content):
-					print "Status [%s]  - path: %s" % (response.code, path)
+					print "Status [%s]  - Path: %s" % (response.code, path)
 				response.close()
+				oknum += 1
 				time.sleep(1)
 			except urllib2.HTTPError as e:
 				print e.code, path
 				pass
+		thread.exit_thread()
+
+	def startScan(self, domain):
+		t = threadVar.get()
+		for i in t:
+			thread.start_new_thread(self.reqhttp, (domain))
 
 # tk
 window = None
-
+num = 0
 
 def window():
 	window = Tk()
@@ -145,15 +154,25 @@ def window():
 
 	# Type Frame
 	type_frame = Frame(window, width=800, height=50)
+	global phpVar
 	phpVar = IntVar()
+	global jspVar
 	jspVar = IntVar()
+	global aspVar
 	aspVar = IntVar()
+	global aspxVar
 	aspxVar = IntVar()
+	global dirVar
 	dirVar = IntVar()
+	global fileVar
 	fileVar = IntVar()
+	global t403Var
 	t403Var = IntVar()
+	global t3xxVar
 	t3xxVar = IntVar()
+	global threadVar
 	threadVar = IntVar()
+	global timeVar
 	timeVar = IntVar()
 	threadVar.set(10)
 	timeVar.set(3)
@@ -184,10 +203,10 @@ def window():
 	type_frame.pack()
 
 	# Target Frame
-	target_frame = Frame(window, width=800, height=50)
+	target_frame = Frame(window, width=800, height=2)
 	l_domain = Label(target_frame, text="Domain : ")
 	e_domain = Entry(target_frame, bd =2, width=80)
-	btn_start = Button(target_frame, text ="Start", width=12, command=donothing)
+	btn_start = Button(target_frame, text ="Start", width=12, command=goScan)
 	l_domain.grid(row=0, column=0)
 	e_domain.grid(row=0, column=1)
 	btn_start.grid(row=0, column=2)
@@ -195,13 +214,15 @@ def window():
 
 	# List Frame
 	list_frame = Frame(window, width=800, height=20)
+	global infoVar
+	global progressVar
 	infoVar = StringVar()
 	progressVar = StringVar()
 	infoVar.set("Infomation : Ready...")
-	progressVar.set("Progress : 0")
+	progressVar.set("Progress : 0/0")
 	l_info = Label(list_frame, textvariable=infoVar)
 	l_progress = Label(list_frame, textvariable=progressVar)
-	resultlist = Listbox(list_frame, width=100, height=25)
+	resultlist = Listbox(list_frame, width=100, height=26, selectmode=SINGLE)
 	l_info.grid(row=0, column=0)
 	l_progress.grid(row=0, column=1)
 	resultlist.grid(row=1, column=0, columnspan=2)
@@ -212,7 +233,41 @@ def window():
 	window.mainloop()
 
 def donothing():
-   tkMessageBox.showinfo("Message", "Do nothing")
+	tkMessageBox.showinfo("Message", "Do nothing")
+
+def goScan():
+	global num
+	is_start = True
+	infoVar.set("Infomation : Staring...")
+	resultlist = None
+	data = Data()
+	if phpVar.get():
+		slist = data.select_list('php')
+		num += len(slist)
+		scanlist += slist
+	if jspVar.get():
+		slist = data.select_list('jsp')
+		num += len(slist)
+		scanlist += slist
+	if aspVar.get():
+		slist = data.select_list('asp')
+		num += len(slist)
+		scanlist += slist
+	if aspxVar.get():
+		slist = data.select_list('aspx')
+		num += len(slist)
+		scanlist += slist
+	if dirVar.get():
+		slist = data.select_list('dir')
+		num += len(slist)
+		scanlist += slist
+	if fileVar.get():
+		slist = data.select_list('file')
+		num += len(slist)
+		scanlist += slist
+	progressVar.set(num)
+	progressVar.set("Progress : 0/"+str(num))
+	resultlist = scanlist
 
 def showCustom():
 	winCustom = Toplevel(width=600, height=600)
