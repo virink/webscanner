@@ -15,11 +15,10 @@ VERSION = "Ver 1.0"
 TITLE = "VScanner - WebScanner " + VERSION
 Baidu_spider = "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)"
 DATABASE = "data.db"
-scanlist = []
 is_start = False
-oknum = 0
-queue = None
 data = None
+window = None
+num = 0
 
 class Data:
 
@@ -85,22 +84,22 @@ class Data:
 			self.conn.commit()
 			self.conn.close()
 
-
 def input_txt(name):
-	queue = Queue.Queue()
+	queueit = Queue.Queue()
 	data = Data()
 	f = open(name,'r')
 	l = f.readlines()
 	for i in l:
-		queue.put(i[:-1])
-	data.insert_path_more("custom",queue)
+		queueit.put(i[:-1])
+	data.insert_path_more("custom",queueit)
 
 def reqhttp(domain):
 	timeout = timeVar.get()
-	while not q.empty():
-		progressVar.set("Progress : "+str(oknum)+"/"+str(num))
-		path = q.get()
-		url = "%s%s" % (domain, path)
+	print is_start
+	while not queue.empty() and is_start:
+		progressVar.set("Progress : "+str(num-queue.qsize())+"/"+str(num))
+		path = queue.get()
+		url = "%s/%s" % (domain, path[0])
 		opener = urllib2.build_opener()
 		urllib2.install_opener(opener)
 		headers = {} 
@@ -108,24 +107,20 @@ def reqhttp(domain):
 		request = urllib2.Request(url, headers=headers) 
 		try:
 			response = urllib2.urlopen(request, timeout=timeout)
+			print response.url
 			content = response.read()
 			if len(content) and response.code is not 200:
-				resultlist.insert(END, "Status [%s]  - Path: %s" % (response.code, path))
+				resultlist.insert(END, "Status [%s]  - Path: %s" % (response.code, url))
 			response.close()
-			oknum += 1
 			time.sleep(1)
-		except urllib2.HTTPError as e:
-			print e.code, path
+		except Exception, e:
+			print e
 			pass
 	thread.exit_thread()
 
 def startScan(domain):
 	for i in xrange(int(threadVar.get())):
-		thread.start_new_thread(reqhttp, (domain))
-
-# tk
-window = None
-num = 0
+		thread.start_new_thread(reqhttp, (domain,))
 
 def window():
 	window = Tk()
@@ -145,24 +140,24 @@ def window():
 	# Type Frame
 	type_frame = Frame(window, width=800, height=50)
 	global phpVar
-	phpVar = IntVar()
 	global jspVar
-	jspVar = IntVar()
 	global aspVar
-	aspVar = IntVar()
 	global aspxVar
-	aspxVar = IntVar()
 	global dirVar
-	dirVar = IntVar()
 	global fileVar
-	fileVar = IntVar()
 	global t403Var
-	t403Var = IntVar()
 	global t3xxVar
-	t3xxVar = IntVar()
 	global threadVar
-	threadVar = IntVar()
 	global timeVar
+	phpVar = IntVar()
+	jspVar = IntVar()
+	aspVar = IntVar()
+	aspxVar = IntVar()
+	dirVar = IntVar()
+	fileVar = IntVar()
+	t403Var = IntVar()
+	t3xxVar = IntVar()
+	threadVar = IntVar()
 	timeVar = IntVar()
 	threadVar.set(10)
 	timeVar.set(3)
@@ -176,8 +171,8 @@ def window():
 	cb_aspx = Checkbutton(type_frame, text="ASP", variable=aspxVar, height=1, width=12)
 	cb_dir = Checkbutton(type_frame, text="DIR", variable=dirVar, height=1, width=12)
 	cb_file = Checkbutton(type_frame, text="FILE", variable=fileVar, height=1, width=12)
-	cb_403 = Checkbutton(type_frame, text="Test 403", variable=t403Var, height=1, width=20)
-	cb_3xx = Checkbutton(type_frame, text="Test 3xx", variable=t3xxVar, height=1, width=20)
+	cb_403 = Checkbutton(type_frame, text="Test 403", variable=t403Var, height=1, width=20, state=DISABLED)
+	cb_3xx = Checkbutton(type_frame, text="Test 3xx", variable=t3xxVar, height=1, width=20, state=DISABLED)
 	l_time.grid(row=0, column=0)
 	s_time.grid(row=0, column=1)
 	cb_php.grid(row=0, column=2)
@@ -194,12 +189,13 @@ def window():
 
 	# Target Frame
 	global domainVar
+	btnStartVar = "Start"
 	domainVar = StringVar()
-	domainVar.set('www.baidu.com')
+	domainVar.set('ourphp100.vir')
 	target_frame = Frame(window, width=800, height=2)
 	l_domain = Label(target_frame, text="Domain : ")
 	e_domain = Entry(target_frame, bd =2, width=80, textvariable=domainVar)
-	btn_start = Button(target_frame, text ="Start", width=12, command=goScan)
+	btn_start = Button(target_frame, text="Scan", width=12, command=goScan)
 	l_domain.grid(row=0, column=0)
 	e_domain.grid(row=0, column=1)
 	btn_start.grid(row=0, column=2)
@@ -209,6 +205,7 @@ def window():
 	list_frame = Frame(window, width=800, height=20)
 	global infoVar
 	global progressVar
+	global resultlist
 	infoVar = StringVar()
 	progressVar = StringVar()
 	infoVar.set("Infomation : Ready...")
@@ -229,41 +226,52 @@ def donothing():
 	tkMessageBox.showinfo("Message", "Do nothing")
 
 def goScan():
-	global num
-	global scanlist
-	is_start = True
-	infoVar.set("Infomation : Staring...")
-	resultlist = None
-	data = Data()
-	if phpVar.get():
-		slist = data.select_list('php')
-		num += len(slist)
-		scanlist += slist
-	if jspVar.get():
-		slist = data.select_list('jsp')
-		num += len(slist)
-		scanlist += slist
-	if aspVar.get():
-		slist = data.select_list('asp')
-		num += len(slist)
-		scanlist += slist
-	if aspxVar.get():
-		slist = data.select_list('aspx')
-		num += len(slist)
-		scanlist += slist
-	if dirVar.get():
-		slist = data.select_list('dir')
-		num += len(slist)
-		scanlist += slist
-	if fileVar.get():
-		slist = data.select_list('file')
-		num += len(slist)
-		scanlist += slist
-	progressVar.set("Progress : 0/"+str(num))
-	global domainVar
-	startScan(domainVar.get())
+	global is_start
+	if is_start:
+		infoVar.set("Infomation : Ready...")
+		is_start = False
+	else:
+		global num
+		num = 0
+		is_start = True
+		infoVar.set("Infomation : Staring...")
+		scanlist = []
+		data = Data()
+		if phpVar.get():
+			slist = data.select_list('php')
+			num += len(slist)
+			scanlist += slist
+		if jspVar.get():
+			slist = data.select_list('jsp')
+			num += len(slist)
+			scanlist += slist
+		if aspVar.get():
+			slist = data.select_list('asp')
+			num += len(slist)
+			scanlist += slist
+		if aspxVar.get():
+			slist = data.select_list('aspx')
+			num += len(slist)
+			scanlist += slist
+		if dirVar.get():
+			slist = data.select_list('dir')
+			num += len(slist)
+			scanlist += slist
+		if fileVar.get():
+			slist = data.select_list('file')
+			num += len(slist)
+			scanlist += slist
+		progressVar.set("Progress : 0/"+str(num))
+		global queue
+		queue.queue.clear()
+		for i in scanlist:
+			queue.put(i)
+		global domainVar
+		domain = domainVar.get()
+		if domain.find('http://') != 0:
+			domain = 'http://'+domain
+		startScan(domain)
 	
-
 def showCustom():
 	winCustom = Toplevel(width=600, height=600)
 	winCustom.title("Manage Yourself Dictionary")
