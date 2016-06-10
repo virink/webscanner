@@ -95,7 +95,6 @@ def input_txt(name):
 
 def reqhttp(domain):
 	timeout = timeVar.get()
-	print is_start
 	while not queue.empty() and is_start:
 		progressVar.set("Progress : "+str(num-queue.qsize())+"/"+str(num))
 		path = queue.get()
