@@ -118,6 +118,7 @@ def reqhttp(domain):
 	thread.exit_thread()
 
 def startScan(domain):
+	resultlist.delete(0,END)
 	for i in xrange(int(threadVar.get())):
 		thread.start_new_thread(reqhttp, (domain,))
 
