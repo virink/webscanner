@@ -29,6 +29,7 @@ class Data:
 		if os.path.exists(DATABASE):
 			self.conn = sqlite3.connect(DATABASE)
 			self.cursor = self.conn.cursor()
+			self.conn.text_factory = str
 
 	def create_table(self, table):
 		sql = "CREATE TABLE " + table + " (\"Id\" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \"path\" TEXT(512) NOT NULL, \"num\" INTEGER INTEGER NOT NULL DEFAULT 0);"
@@ -44,6 +45,8 @@ class Data:
 			ruselt = []
 			cursor = self.cursor.execute("SELECT path from " + table)
 			ruselt = self.cursor.fetchall()
+			# for r in res:
+			# 	ruselt.append(r[0].decode('utf8'))
 			return ruselt
 		except Exception, e:
 			print e
