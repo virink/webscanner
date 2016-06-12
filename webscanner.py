@@ -276,6 +276,7 @@ def goScan():
 		startScan(domain)
 	
 def showCustom():
+	# TODO
 	winCustom = Toplevel(width=600, height=600)
 	winCustom.title("Manage Yourself Dictionary")
 	winCustom.mainloop()
