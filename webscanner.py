@@ -108,12 +108,12 @@ def reqhttp(domain):
 			response = urllib2.urlopen(request, timeout=timeout)
 			print response.url
 			content = response.read()
-			if len(content) and response.code is not 200:
+			if len(content):
 				resultlist.insert(END, "Status [%s]  - Path: %s" % (response.code, url))
 			response.close()
 			time.sleep(1)
 		except Exception, e:
-			print e
+			# print e
 			pass
 	thread.exit_thread()
 
@@ -190,7 +190,7 @@ def window():
 	global domainVar
 	btnStartVar = "Start"
 	domainVar = StringVar()
-	domainVar.set('ourphp100.vir')
+	domainVar.set('ourphp152.vir')
 	target_frame = Frame(window, width=800, height=2)
 	l_domain = Label(target_frame, text="Domain : ")
 	e_domain = Entry(target_frame, bd =2, width=80, textvariable=domainVar)
